@@ -17,6 +17,7 @@ const val MY_FAVOURITES_PRODUCTTs = "$PRODUCT_REQUEST/favorites"
 const val DELETE_My_FAV_PRODUCT = "$PRODUCT_REQUEST/fav/delete"
 const val SET_FAV_PRODUCT_REQUEST = "$PRODUCT_REQUEST/setFav"
 const val RATE_PRODUCT = "$API_VERSION/product/rate"
+const val POPULAR_PRODUCT = "$API_VERSION/product/popular"
 const val CREATE_CATEGORY_REQUEST = "$CATEGORY_REQUEST/createCategory"
 const val CREATE_PRODUCT_CATEGORY_REQUEST = "$PRODUCT_REQUEST/createProduct"
 
@@ -578,6 +579,47 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
 
         }
+
+        get(POPULAR_PRODUCT){
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+            try {
+
+                val favRestaurants = categoryAndProductRepository.getPopularProduct(user)
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "Success",
+                        data = favRestaurants
+                    )
+                )
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+        }
+
 
     }
 }
