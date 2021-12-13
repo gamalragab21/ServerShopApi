@@ -294,7 +294,7 @@ class CategoryAndProductRepository(val db: Database) {
         favProduct
     }
 
-   private suspend fun findProductById(productId: Int, userId: Int)=withContext(Dispatchers.IO){
+    suspend fun findProductById(productId: Int, userId: Int)=withContext(Dispatchers.IO){
         // this fun check if user email exist or not and if exists return user info
         val restaurant = db.from(ProductEntity)
             .select()
@@ -309,19 +309,17 @@ class CategoryAndProductRepository(val db: Database) {
 
     suspend fun getPopularProduct(user: User)= withContext(Dispatchers.IO) {
         // this fun check if user email exist or not and if exists return user info
-        val popularRestaurants = db.from(ProductEntity)
+        val popularProduct = db.from(ProductEntity)
             .select()
-            .orderBy(ProductEntity.createAt.desc())
             .mapNotNull {
                 rowToProducts(it, user.id!!)
             }
 
 
-        popularRestaurants.sortedByDescending {
+        popularProduct.sortedByDescending {
             it.rateCount
-
+        }
     }
-
     suspend fun deleteFavouriteProduct(productId: Int, userId: Int?)= withContext(Dispatchers.IO) {
         val result= db.delete(FavProductEntity){
             (it.userId eq userId!!) and (it.productId eq productId)
@@ -330,11 +328,4 @@ class CategoryAndProductRepository(val db: Database) {
     }
 
 
-}
-    suspend fun deleteFavouriteProduct(productId: Int, userId: Int?)= withContext(Dispatchers.IO) {
-        val result= db.delete(FavProductEntity){
-            (it.userId eq userId!!) and (it.productId eq productId)
-        }
-        result
-    }
 }

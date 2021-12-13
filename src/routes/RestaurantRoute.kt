@@ -16,14 +16,16 @@ import io.ktor.routing.*
 
 
 const val RESTAURANTS = "$API_VERSION/restaurants"
-const val FILTER_RESTAURANTS = "$API_VERSION/restaurants/filter"
-const val RATE_RESTAURANTS = "$API_VERSION/restaurants/rate"
-const val My_RATING_RESTAURANTS = "$API_VERSION/restaurants/rating"
-const val NEARLY_LOCATION_RESTAURANTS = "$API_VERSION/restaurants/nearlyLocation"
-const val POPULAR_RESTAURANTS = "$API_VERSION/restaurants/popular"
-const val CREATE_FAV_RESTAURANT = "$API_VERSION/restaurants/createFav"
-const val My_FAVs_RESTAURANTTs = "$API_VERSION/restaurants/favourites"
-const val DELETE_My_FAV_RESTAURANTTs = "$API_VERSION/restaurants/fav/delete"
+const val FIND_RESTAURANT = "$RESTAURANTS/findById"
+const val FILTER_RESTAURANTS = "$RESTAURANTS/filter"
+const val RATE_RESTAURANTS = "$RESTAURANTS/rate"
+const val UPDATE_RATE_RESTAURANTS = "$RESTAURANTS/updateRate"
+const val My_RATING_RESTAURANTS = "$RESTAURANTS/rating"
+const val NEARLY_LOCATION_RESTAURANTS = "$RESTAURANTS/nearlyLocation"
+const val POPULAR_RESTAURANTS = "$RESTAURANTS/popular"
+const val CREATE_FAV_RESTAURANT = "$RESTAURANTS/createFav"
+const val My_FAVs_RESTAURANTTs = "$RESTAURANTS/favourites"
+const val DELETE_My_FAV_RESTAURANTTs = "$RESTAURANTS/fav/delete"
 const val CREATE_RESTAURANT_REQUEST = "$RESTAURANTS/createRestaurant"
 const val LOGIN_RESTAURANT_REQUEST = "$RESTAURANTS/loginRestaurant"
 const val MY_RESTAURANT_REQUEST = "$RESTAURANTS/myRestaurant"
@@ -211,6 +213,73 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
                 return@get
             }
         }
+
+        get(FIND_RESTAURANT) {
+
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+            val restaurantId = try {
+                call.request.queryParameters["restaurantId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+            try {
+
+                val resultRestaurant = restaurantRepository.findRestaurantById(restaurantId,user)
+                if (resultRestaurant==null){
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = false,
+                            message = "Not Found Restaurant With this Id",
+                            data = resultRestaurant
+                        )
+                    )
+                    return@get
+                }else {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = true,
+                            message = "Success",
+                            data = resultRestaurant
+                        )
+                    )
+                    return@get
+                }
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+        }
+
         get(FILTER_RESTAURANTS) {
 
             val user = try {
@@ -309,7 +378,7 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
                 call.principal<User>()!!
             } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK,
+                    HttpStatusCode.BadGateway,
                     MyResponse(
                         success = false,
                         message = e.message ?: "Failed ",
@@ -322,7 +391,7 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
                 call.receive<RateRestaurant>()
             } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK,
+                    HttpStatusCode.BadRequest,
                     MyResponse(
                         success = false,
                         message = "Missing Some Fields",
@@ -337,18 +406,19 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
                 rateRestaurant.userId = user.id
                 val result = restaurantRepository.rateRestaurant(rateRestaurant)
                 if (result > 0) {
+                    rateRestaurant.userId=result
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
                             message = "Thanks For Your Rate",
-                            data = null
+                            data = rateRestaurant
                         )
                     )
                     return@post
                 } else {
                     call.respond(
-                        HttpStatusCode.OK,
+                        HttpStatusCode.Conflict,
                         MyResponse(
                             success = false,
                             message = "Failed",
@@ -360,7 +430,7 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
 
             } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK,
+                    HttpStatusCode.Conflict,
                     MyResponse(
                         success = false,
                         message = e.message ?: "Failed Rated",
@@ -368,6 +438,74 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
                     )
                 )
                 return@post
+            }
+        }
+
+        put(UPDATE_RATE_RESTAURANTS) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@put
+            }
+            val rateRestaurant = try {
+                call.receive<RateRestaurant>()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = "Missing Some Fields",
+                        data = null
+                    )
+                )
+                return@put
+            }
+
+
+            try {
+                rateRestaurant.userId = user.id
+                val result = restaurantRepository.updateRateRestaurant(rateRestaurant)
+                if (result > 0) {
+                    rateRestaurant.userId=result
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = true,
+                            message = "Thanks For Your Rate",
+                            data = rateRestaurant
+                        )
+                    )
+                    return@put
+                } else {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = "Failed",
+                            data = null
+                        )
+                    )
+                    return@put
+                }
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed Rated",
+                        data = null
+                    )
+                )
+                return@put
             }
         }
 

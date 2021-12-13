@@ -25,7 +25,8 @@ data class Restaurant (
     val freeDelivery:Boolean,
     val rateRestaurant:List<RateRestaurant>?=null,
     var inFav:Boolean?=false,
-    var rateCount:Double?=0.0
+    var rateCount:Double?=0.0,
+    var user:User
 ): Principal {
     fun hashedPassword(): String {
         return BCrypt.hashpw(password, BCrypt.gensalt())

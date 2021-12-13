@@ -12,6 +12,7 @@ import io.ktor.routing.*
 
 const val CATEGORY_REQUEST = "$API_VERSION/category"
 const val PRODUCT_REQUEST = "$API_VERSION/product"
+const val FIND_PRODUCT_REQUEST = "$PRODUCT_REQUEST/findByID"
 const val PRODUCT_REQUEST_FORYOU = "$API_VERSION/product/for you"
 const val MY_FAVOURITES_PRODUCTTs = "$PRODUCT_REQUEST/favorites"
 const val DELETE_My_FAV_PRODUCT = "$PRODUCT_REQUEST/fav/delete"
@@ -261,6 +262,63 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
                         success = true,
                         message = "Success",
                         data = products
+                    )
+                )
+                return@get
+
+
+        } catch (e: Exception) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                MyResponse(
+                    success = false,
+                    message = e.message ?: "Failed get Category",
+                    data = null
+                )
+            )
+            return@get
+        }
+    }
+
+    get(FIND_PRODUCT_REQUEST) {
+        val user = try {
+            call.principal<User>()!!
+        } catch (e: Exception) {
+            call.respond(
+                HttpStatusCode.BadGateway,
+                MyResponse(
+                    success = false,
+                    message = e.message ?: "Failed ",
+                    data = null
+                )
+            )
+            return@get
+        }
+        val productId = try {
+            call.request.queryParameters["productId"]!!.toInt()
+        }
+        catch (e: Exception) {
+            call.respond(
+                HttpStatusCode.BadGateway,
+                MyResponse(
+                    success = false,
+                    message = "Missing restaurantId Field",
+                    data = null
+                )
+            )
+            return@get
+        }
+
+        try {
+
+
+                val product = categoryAndProductRepository.findProductById(productId,user.id!!)
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "Success",
+                        data = product
                     )
                 )
                 return@get

@@ -48,7 +48,7 @@ class RestaurantRepository(val db: Database) {
         restaurant
     }
 
-    private suspend fun findRestaurantById(restaurantId: Int, user: User?) = withContext(Dispatchers.IO) {
+     suspend fun findRestaurantById(restaurantId: Int, user: User?) = withContext(Dispatchers.IO) {
         // this fun check if user email exist or not and if exists return user info
         val restaurant = db.from(RestaurantEntity)
             .select()
@@ -104,7 +104,8 @@ class RestaurantRepository(val db: Database) {
                 freeDelivery,
                 rateRestaurant,
                 isFav,
-                ratingCount.absoluteValue
+                ratingCount.absoluteValue,
+                user!!
             )
         }
     }
@@ -176,7 +177,8 @@ class RestaurantRepository(val db: Database) {
             .select()
             .where {
                 RateRestaurantEntity.userId eq user.id!!
-            }
+            }.orderBy(RateRestaurantEntity.createAt.desc())
+
             .mapNotNull {
 //                 rowToFavRestaurant(it)
                 val restaurantId = it[RateRestaurantEntity.restaurantId] ?: -1
@@ -265,13 +267,13 @@ class RestaurantRepository(val db: Database) {
     }
 
     suspend fun rateRestaurant(rateRestaurant: RateRestaurant) = withContext(Dispatchers.IO) {
-        val result = db.insert(RateRestaurantEntity) {
+        val result = db.insertAndGenerateKey(RateRestaurantEntity) {
             set(it.restaurantId, rateRestaurant.restaurantId)
             set(it.userId, rateRestaurant.userId)
             set(it.countRate, rateRestaurant.countRate)
             set(it.createAt, rateRestaurant.createAt)
         }
-        result
+        result as Int
     }
 
     suspend fun deleteFavouriteRestaurant(restaurantId: Int, userId: Int?) = withContext(Dispatchers.IO) {
@@ -294,7 +296,18 @@ class RestaurantRepository(val db: Database) {
 
     }
 
+    suspend fun updateRateRestaurant(rateRestaurant: RateRestaurant)= withContext(Dispatchers.IO) {
 
+        val result=db.update(RateRestaurantEntity){
+            set(it.countRate, rateRestaurant.countRate)
+            set(it.createAt, rateRestaurant.createAt)
+            where {
+                (it.rateId eq rateRestaurant.rateId!!) and (it.userId eq rateRestaurant.userId!!) and (it.restaurantId eq rateRestaurant.restaurantId)
+            }
+        }
+
+        result
+    }
 
 
 }
