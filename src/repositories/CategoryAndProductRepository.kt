@@ -7,7 +7,7 @@ import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 
-class CategoryAndProductRepository(val db: Database) {
+class CategoryAndProductRepository(val db: Database,val userRepository: UserRepository) {
 
 
     suspend fun createCategory(category: Category) = withContext(Dispatchers.IO) {
@@ -78,7 +78,7 @@ class CategoryAndProductRepository(val db: Database) {
 
     }
 
-    suspend fun getProductOfCategory(categoryId: Int, restaurantId: Int,userId: Int) = withContext(Dispatchers.IO) {
+    suspend fun getProductOfCategory(categoryId: Int, restaurantId: Int,user: User) = withContext(Dispatchers.IO) {
         val products = db.from(ProductEntity)
             .select()
             .orderBy(ProductEntity.createAt.desc())
@@ -86,7 +86,7 @@ class CategoryAndProductRepository(val db: Database) {
                 (ProductEntity.categoryId eq categoryId) and (ProductEntity.restaurantId eq restaurantId)
             }
             .mapNotNull {
-                rowToProducts(it,userId)
+                rowToProducts(it,user)
             }
 
 //        products.forEach { product ->
@@ -111,7 +111,7 @@ class CategoryAndProductRepository(val db: Database) {
         products
     }
 
-    suspend fun getProductForYou(restaurantId: Int,userId: Int) = withContext(Dispatchers.IO) {
+    suspend fun getProductForYou(restaurantId: Int,user: User) = withContext(Dispatchers.IO) {
         val products = db.from(ProductEntity)
             .select()
             .orderBy(ProductEntity.createAt.desc())
@@ -119,7 +119,7 @@ class CategoryAndProductRepository(val db: Database) {
               ProductEntity.restaurantId eq restaurantId
             }
             .mapNotNull {
-                rowToProducts(it,userId)
+                rowToProducts(it,user)
             }
 
         products.sortedByDescending {
@@ -156,7 +156,7 @@ class CategoryAndProductRepository(val db: Database) {
             rateProduct
         }
 
-    private fun rowToRateProduct(row: QueryRowSet):RateProduct? {
+    private suspend fun rowToRateProduct(row: QueryRowSet):RateProduct? {
         return if (row==null){
             null
         }else{
@@ -166,8 +166,8 @@ class CategoryAndProductRepository(val db: Database) {
             val countRate=row[RateProductEntity.countRate]?:0.0
             val messageRate=row[RateProductEntity.messageRate]?:""
             val createAt=row[RateProductEntity.createAt]?:0
-
-            RateProduct(rateId,userId,productId,countRate,messageRate,createAt)
+            val user= userRepository.findUserById(userId)
+            RateProduct(rateId,userId,productId,countRate,messageRate,createAt, user!!)
         }
     }
 
@@ -183,7 +183,7 @@ class CategoryAndProductRepository(val db: Database) {
         }
     }
 
-    private suspend fun rowToProducts(row: QueryRowSet, userId: Int): Product? {
+    private suspend fun rowToProducts(row: QueryRowSet, user: User): Product? {
         return if (row == null) {
             null
         } else {
@@ -195,7 +195,7 @@ class CategoryAndProductRepository(val db: Database) {
             val createAt=row[ProductEntity.createAt] ?: 0
             val freeDelivery=row[ProductEntity.freeDelivery] ?: true
             val productDescription=row[ProductEntity.productDescription] ?:""
-            val favProduct=checkProductInFav(productId, userId!!)
+            val favProduct=checkProductInFav(productId, user.id!!)
             val isFav = favProduct != null
 
             val imageProductList=getImagesProduct(productId)
@@ -223,7 +223,8 @@ class CategoryAndProductRepository(val db: Database) {
                 false,
                 ratingCount,
                 imageProductList,
-                rateProductList
+                rateProductList,
+                user
             )
         }
     }
@@ -264,6 +265,22 @@ class CategoryAndProductRepository(val db: Database) {
         }
         result
     }
+    suspend fun updateRateProduct(rateProduct: RateProduct)= withContext(Dispatchers.IO) {
+
+        val result=db.update(RateProductEntity){
+            set(it.countRate, rateProduct.countRate)
+            set(it.createAt, rateProduct.createAt)
+            set(it.messageRate, rateProduct.messageRate)
+
+            where {
+                (it.rateId eq rateProduct.rateId!!) and
+               (it.userId eq rateProduct.userId!!) and
+                (it.productId eq rateProduct.productId)
+            }
+        }
+
+        result
+    }
 
     suspend fun setInFavProduct(favRestaurant: FavProduct)= withContext(Dispatchers.IO){
         println("FavProduct: ${favRestaurant.toString()}")
@@ -274,11 +291,11 @@ class CategoryAndProductRepository(val db: Database) {
         result
     }
 
-    suspend fun getAllFavProduct(userId: Int) = withContext(Dispatchers.IO) {
+    suspend fun getAllFavProduct(user: User) = withContext(Dispatchers.IO) {
         val favProduct = db.from(FavProductEntity)
             .select()
             .where {
-                FavProductEntity.userId eq userId
+                FavProductEntity.userId eq user.id!!
             }.map {row->
              //  rowToFavProduct(row)
 //                val favProductId=row[FavProductEntity.favProductId]?:-1
@@ -286,7 +303,7 @@ class CategoryAndProductRepository(val db: Database) {
                 val productId=row[FavProductEntity.productId]?:-1
 //                FavProduct(favProductId,userId,productId)
 
-                val product=findProductById(productId,userId)
+                val product=findProductById(productId,user)
                product?.inFav=true
                 product
             }
@@ -294,14 +311,14 @@ class CategoryAndProductRepository(val db: Database) {
         favProduct
     }
 
-    suspend fun findProductById(productId: Int, userId: Int)=withContext(Dispatchers.IO){
+    suspend fun findProductById(productId: Int, user: User)=withContext(Dispatchers.IO){
         // this fun check if user email exist or not and if exists return user info
         val restaurant = db.from(ProductEntity)
             .select()
             .where {
                 ProductEntity.productId eq productId
             }.map {
-                rowToProducts(it,userId)
+                rowToProducts(it,user)
             }.firstOrNull()
 
         restaurant
@@ -312,7 +329,7 @@ class CategoryAndProductRepository(val db: Database) {
         val popularProduct = db.from(ProductEntity)
             .select()
             .mapNotNull {
-                rowToProducts(it, user.id!!)
+                rowToProducts(it, user)
             }
 
 
@@ -320,6 +337,7 @@ class CategoryAndProductRepository(val db: Database) {
             it.rateCount
         }
     }
+
     suspend fun deleteFavouriteProduct(productId: Int, userId: Int?)= withContext(Dispatchers.IO) {
         val result= db.delete(FavProductEntity){
             (it.userId eq userId!!) and (it.productId eq productId)

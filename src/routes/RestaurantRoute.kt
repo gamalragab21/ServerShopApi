@@ -406,12 +406,11 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
                 rateRestaurant.userId = user.id
                 val result = restaurantRepository.rateRestaurant(rateRestaurant)
                 if (result > 0) {
-                    rateRestaurant.userId=result
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
-                            message = "Thanks For Your Rate",
+                            message = "\uD83D\uDE0D Thanks For Your Rate",
                             data = rateRestaurant
                         )
                     )
@@ -474,12 +473,11 @@ fun Route.restaurantRoute(restaurantRepository: RestaurantRepository, tokenManag
                 rateRestaurant.userId = user.id
                 val result = restaurantRepository.updateRateRestaurant(rateRestaurant)
                 if (result > 0) {
-                    rateRestaurant.userId=result
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
-                            message = "Thanks For Your Rate",
+                            message = "\uD83D\uDE0D Thanks For Your Rate ",
                             data = rateRestaurant
                         )
                     )

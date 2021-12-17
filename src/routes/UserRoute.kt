@@ -20,6 +20,7 @@ const val DELIVERY_ADDRESS_USERS = "$USERS/DeliveryAddress"
 const val REGISTER_REQUEST = "$USERS/register"
 const val LOGIN_REQUEST = "$USERS/login"
 const val ME_REQUEST = "$USERS/me"
+const val FIND_USER_REQUEST = "$USERS/findUserById"
 
 fun Route.userRoute(userRepository: UserRepository, tokenManager: TokenManager) {
 
@@ -190,6 +191,7 @@ fun Route.userRoute(userRepository: UserRepository, tokenManager: TokenManager) 
 
 
         }
+
         post(CREATE_DELIVERY_ADDRESS_USERS) {
             // get user info from jwt
             val user =  try{
@@ -259,6 +261,7 @@ fun Route.userRoute(userRepository: UserRepository, tokenManager: TokenManager) 
 
 
         }
+
         get(DELIVERY_ADDRESS_USERS) {
             // get user info from jwt
             val user =  try{
@@ -302,6 +305,50 @@ fun Route.userRoute(userRepository: UserRepository, tokenManager: TokenManager) 
 
             }
         }
+
+        get(FIND_USER_REQUEST) {
+           val userId=try {
+               call.request.queryParameters["userId"]!!.toInt()
+           }catch (e:Exception){
+               call.respond(
+                   HttpStatusCode.BadGateway,
+                   MyResponse(
+                       success = false,
+                       message = "Missing Some Fields",
+                       data = null
+                   )
+               )
+               return@get
+           }
+            try {
+
+                val user=userRepository.findUserById(userId)
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "Success",
+                        data = user
+                    )
+                )
+                return@get
+
+            }catch (e:Exception) {
+
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message?:"Failed",
+                        data = null
+                    )
+                )
+                return@get
+
+            }
+        }
+
+
     }
 
 

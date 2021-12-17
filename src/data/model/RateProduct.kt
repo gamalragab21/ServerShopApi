@@ -6,10 +6,11 @@ import org.ktorm.schema.int
 
 @Serializable
 data class RateProduct(
-    val rateId :Int?=null,
+    var rateId :Int?=null,
     var userId :Int?=null,
     val productId :Int,
     val countRate:Double,
     val messageRate:String,
     val createAt:Long,
+    var user:User?=null
 )

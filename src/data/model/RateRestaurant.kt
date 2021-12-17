@@ -6,7 +6,7 @@ import org.ktorm.schema.int
 
 @Serializable
 data class RateRestaurant(
-    val rateId :Int?=null,
+    var rateId :Int?=null,
     var userId :Int?=null,
     val restaurantId :Int,
     val countRate:Double,

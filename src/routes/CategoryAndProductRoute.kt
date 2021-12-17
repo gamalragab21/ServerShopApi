@@ -17,7 +17,8 @@ const val PRODUCT_REQUEST_FORYOU = "$API_VERSION/product/for you"
 const val MY_FAVOURITES_PRODUCTTs = "$PRODUCT_REQUEST/favorites"
 const val DELETE_My_FAV_PRODUCT = "$PRODUCT_REQUEST/fav/delete"
 const val SET_FAV_PRODUCT_REQUEST = "$PRODUCT_REQUEST/setFav"
-const val RATE_PRODUCT = "$API_VERSION/product/rate"
+const val RATE_PRODUCT = "$PRODUCT_REQUEST/rate"
+const val UPDATE_RATE_PRODUCT = "$PRODUCT_REQUEST/updateRate"
 const val POPULAR_PRODUCT = "$API_VERSION/product/popular"
 const val CREATE_CATEGORY_REQUEST = "$CATEGORY_REQUEST/createCategory"
 const val CREATE_PRODUCT_CATEGORY_REQUEST = "$PRODUCT_REQUEST/createProduct"
@@ -255,7 +256,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
         try {
 
 
-                val products = categoryAndProductRepository.getProductOfCategory(categoryId,restaurantId,user.id!!)
+                val products = categoryAndProductRepository.getProductOfCategory(categoryId,restaurantId,user)
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
@@ -312,7 +313,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
         try {
 
 
-                val product = categoryAndProductRepository.findProductById(productId,user.id!!)
+                val product = categoryAndProductRepository.findProductById(productId,user)
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
@@ -367,7 +368,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
         }
 
         try {
-                val products = categoryAndProductRepository.getProductForYou(restaurantId,user.id!!)
+                val products = categoryAndProductRepository.getProductForYou(restaurantId,user)
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
@@ -409,7 +410,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
         try {
              println("UserId :${user.toString()}")
-            val favRestaurants = categoryAndProductRepository.getAllFavProduct(user.id!!)
+            val favRestaurants = categoryAndProductRepository.getAllFavProduct(user)
             call.respond(
                 HttpStatusCode.OK,
                 MyResponse(
@@ -470,7 +471,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
                     MyResponse(
                         success = true,
                         message = "\uD83D\uDE0D Thanks For Your Rate",
-                        data = null
+                        data = result
                     )
                 )
                 return@post
@@ -498,6 +499,72 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
             return@post
         }
     }
+        put(UPDATE_RATE_PRODUCT) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@put
+            }
+            val rateProduct = try {
+                call.receive<RateProduct>()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = "Missing Some Fields",
+                        data = null
+                    )
+                )
+                return@put
+            }
+
+
+            try {
+                rateProduct.userId = user.id
+                val result = categoryAndProductRepository.updateRateProduct(rateProduct)
+                if (result > 0) {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = true,
+                            message = "\uD83D\uDE0D Thanks For Your Rate",
+                            data = rateProduct
+                        )
+                    )
+                    return@put
+                } else {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = "Failed",
+                            data = null
+                        )
+                    )
+                    return@put
+                }
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed Rated",
+                        data = null
+                    )
+                )
+                return@put
+            }
+        }
 
 
     post(SET_FAV_PRODUCT_REQUEST) {

@@ -17,6 +17,7 @@ data class Product(
     val inCart:Boolean?=false,
     var rateCount:Double?=0.0,
     val images:List<ProductImage>,
-    val rating:List<RateProduct>?=null
+    val rating:List<RateProduct>?=null,
+    var user:User
 
 )
