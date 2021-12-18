@@ -88,7 +88,7 @@ fun Application.module(testing: Boolean = false) {
         userRoute(userRepository, tokenManager)
         restaurantRoute(restaurantRepository, tokenManager)
         categoryAndProductRoute(categoryAndProductRepository)
-        get("/gi") {
+        get("/") {
             call.respondText("HELLO WORLD! this shop api create by Gamal ragab ", contentType = ContentType.Text.Plain)
         }
 
