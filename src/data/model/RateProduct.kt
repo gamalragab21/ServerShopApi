@@ -11,6 +11,6 @@ data class RateProduct(
     val productId :Int,
     val countRate:Double,
     val messageRate:String,
-    val createAt:Long,
+    val createAt:Int,
     var user:User?=null
 )

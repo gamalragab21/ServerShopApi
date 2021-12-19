@@ -12,7 +12,7 @@ object RestaurantEntity:Table<Nothing>("Restaurant") {
     val contact = varchar("contact")
     val latitude = double("latitude")
     val longitude = double("longitude")
-    val createAt = long("createAt")
+    val createAt = int("createAt")
     val restaurantType = varchar("restaurantType")
     val freeDelivery = boolean("freeDelivery")
 }

@@ -9,5 +9,5 @@ object RateProductEntity:Table<Nothing>("RateProduct") {
     val productId =  int("productId")
     val countRate =  double("countRate")
     val messageRate =  varchar("messageRate")
-    val createAt =  long("createAt")
+    val createAt =  int("createAt")
 }

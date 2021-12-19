@@ -5,9 +5,9 @@ import org.ktorm.database.Database
 object ConnectionDataBase {
 
     val database = Database.connect(
-        url = "jdbc:mysql://MYSQL5037.site4now.net/db_a7ce11_noteapp", //server/database
+        url = "jdbc:mysql://MYSQL5045.site4now.net/db_a7ce11_shopapi", //server/database
         driver = "com.mysql.cj.jdbc.Driver",
-        user = "a7ce11_noteapp", // uid
+        user = "a7ce11_shopapi", // uid
         password = "Gamal2172001"
 
 

@@ -14,7 +14,7 @@ data class User(
     val latitude:Double,
     val longitude:Double,
     val mobile:String,
-    val createAt:Long
+    val createAt:Int
 ): Principal {
     fun hashedPassword(): String {
         return BCrypt.hashpw(password, BCrypt.gensalt())

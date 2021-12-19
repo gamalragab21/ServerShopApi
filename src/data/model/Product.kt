@@ -10,7 +10,7 @@ data class Product(
     var restaurantId:Int?=-1,
     val productName:String,
     val productPrice:Double,
-    val createAt:Long,
+    val createAt:Int,
     val freeDelivery:Boolean,
     val productDescription:String,
     var inFav:Boolean?=false,
