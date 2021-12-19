@@ -105,7 +105,7 @@ class RestaurantRepository(val db: Database) {
                 rateRestaurant,
                 isFav,
                 ratingCount.absoluteValue,
-                user!!
+                user
             )
         }
     }
