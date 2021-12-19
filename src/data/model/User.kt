@@ -3,6 +3,7 @@ package com.example.data.model
 import io.ktor.auth.*
 import kotlinx.serialization.Serializable
 import org.mindrot.jbcrypt.BCrypt
+import java.math.BigInteger
 
 @Serializable
 data class User(
@@ -14,7 +15,7 @@ data class User(
     val latitude:Double,
     val longitude:Double,
     val mobile:String,
-    val createAt:Int
+    val createAt:Long
 ): Principal {
     fun hashedPassword(): String {
         return BCrypt.hashpw(password, BCrypt.gensalt())

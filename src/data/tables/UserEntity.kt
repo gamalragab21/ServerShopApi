@@ -1,6 +1,11 @@
 package com.example.data.tables
 
+import com.google.protobuf.Descriptors
 import org.ktorm.schema.*
+import java.math.BigInteger
+import java.sql.Types
+import java.sql.Types.BIGINT
+
 
 object UserEntity:Table<Nothing>("User") {
     val userId =  int("userId").primaryKey()
@@ -11,5 +16,5 @@ object UserEntity:Table<Nothing>("User") {
     val mobile = varchar("mobile")
     val latitude = double("latitude")
     val longitude = double("longitude")
-    val createAt = int("createAt")
+    val createAt = long("createAt")
 }
