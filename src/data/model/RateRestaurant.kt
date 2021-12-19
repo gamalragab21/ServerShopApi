@@ -10,5 +10,5 @@ data class RateRestaurant(
     var userId :Int?=null,
     val restaurantId :Int,
     val countRate:Double,
-    val createAt:Int
+    val createAt:Long
 )

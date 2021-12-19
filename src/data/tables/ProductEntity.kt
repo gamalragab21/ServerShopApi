@@ -10,6 +10,6 @@ object ProductEntity:Table<Nothing>("Product") {
     val productName = varchar("productName")
     val productPrice = double("productPrice")
     val freeDelivery = boolean("freeDelivery")
-    val createAt = int("createAt")
+    val createAt = long("createAt")
     val productDescription = varchar("productDescription")
 }

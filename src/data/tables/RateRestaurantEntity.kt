@@ -8,5 +8,5 @@ object RateRestaurantEntity:Table<Nothing>("RateRestaurant") {
     val userId =  int("userId")
     val restaurantId =  int("restaurantId")
     val countRate =  double("countRate")
-    val createAt =  int("createAt")
+    val createAt =  long("createAt")
 }

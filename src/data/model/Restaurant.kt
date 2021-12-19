@@ -20,7 +20,7 @@ data class Restaurant (
     val contact :String,
     val latitude :Double,
     val longitude :Double,
-    val createAt :Int,
+    val createAt :Long,
     val restaurantType:String,
     val freeDelivery:Boolean,
     val rateRestaurant:List<RateRestaurant>?=null,
