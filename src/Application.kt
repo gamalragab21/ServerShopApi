@@ -2,9 +2,11 @@ package com.example
 
 import com.example.helpers.ConnectionDataBase
 import com.example.repositories.CategoryAndProductRepository
+import com.example.repositories.OrdersRepository
 import com.example.repositories.RestaurantRepository
 import com.example.repositories.UserRepository
 import com.example.routes.categoryAndProductRoute
+import com.example.routes.orderRoute
 import com.example.routes.restaurantRoute
 import com.example.routes.userRoute
 import com.example.utils.TokenManager
@@ -32,6 +34,7 @@ fun Application.module(testing: Boolean = false) {
     val userRepository = UserRepository(db)
     val restaurantRepository = RestaurantRepository(db)
     val categoryAndProductRepository = CategoryAndProductRepository(db,userRepository)
+    val ordersRepository = OrdersRepository(db,userRepository)
     val tokenManager = TokenManager(config)
 
 
@@ -88,6 +91,7 @@ fun Application.module(testing: Boolean = false) {
         userRoute(userRepository, tokenManager)
         restaurantRoute(restaurantRepository, tokenManager)
         categoryAndProductRoute(categoryAndProductRepository)
+        orderRoute(ordersRepository)
         get("/") {
             call.respondText("HELLO WORLD! this shop api create by Gamal ragab ", contentType = ContentType.Text.Plain)
         }

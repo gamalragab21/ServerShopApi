@@ -28,6 +28,7 @@ class CategoryAndProductRepository(val db: Database,val userRepository: UserRepo
             set(it.productDescription, productRequest.productDescription)
             set(it.freeDelivery, productRequest.freeDelivery)
             set(it.createAt, productRequest.createAt)
+            set(it.coinType, productRequest.coinType)
         }
 
         println("resultInsertProduct: ${resultInsertProduct}")
@@ -191,6 +192,7 @@ class CategoryAndProductRepository(val db: Database,val userRepository: UserRepo
             val categoryId=row[ProductEntity.categoryId] ?: -1
             val restaurantId=row[ProductEntity.restaurantId] ?: -1
             val productName=row[ProductEntity.productName] ?: ""
+            val coinType:String=row[ProductEntity.coinType]?:"$"
             val productPrice=row[ProductEntity.productPrice] ?: 0.0
             val createAt=row[ProductEntity.createAt] ?: 0
             val freeDelivery=row[ProductEntity.freeDelivery] ?: true
@@ -217,6 +219,7 @@ class CategoryAndProductRepository(val db: Database,val userRepository: UserRepo
                 productName,
                 productPrice,
                 createAt,
+                coinType,
                 freeDelivery,
                 productDescription,
                 isFav,
@@ -331,7 +334,6 @@ class CategoryAndProductRepository(val db: Database,val userRepository: UserRepo
             .mapNotNull {
                 rowToProducts(it, user)
             }
-
 
         popularProduct.sortedByDescending {
             it.rateCount

@@ -19,7 +19,7 @@ const val DELETE_My_FAV_PRODUCT = "$PRODUCT_REQUEST/fav/delete"
 const val SET_FAV_PRODUCT_REQUEST = "$PRODUCT_REQUEST/setFav"
 const val RATE_PRODUCT = "$PRODUCT_REQUEST/rate"
 const val UPDATE_RATE_PRODUCT = "$PRODUCT_REQUEST/updateRate"
-const val POPULAR_PRODUCT = "$API_VERSION/product/popular"
+const val POPULAR_PRODUCT = "$PRODUCT_REQUEST/popular"
 const val CREATE_CATEGORY_REQUEST = "$CATEGORY_REQUEST/createCategory"
 const val CREATE_PRODUCT_CATEGORY_REQUEST = "$PRODUCT_REQUEST/createProduct"
 

@@ -11,5 +11,6 @@ object ProductEntity:Table<Nothing>("Product") {
     val productPrice = double("productPrice")
     val freeDelivery = boolean("freeDelivery")
     val createAt = long("createAt")
+    val coinType = varchar("coinType")
     val productDescription = varchar("productDescription")
 }

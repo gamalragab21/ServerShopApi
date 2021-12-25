@@ -7,7 +7,7 @@ import java.sql.Types
 import java.sql.Types.BIGINT
 
 
-object UserEntity:Table<Nothing>("User") {
+object UserEntity:Table<Nothing>("users") {
     val userId =  int("userId").primaryKey()
     val userName = varchar("userName")
     val imageProfile = varchar("imageProfile")

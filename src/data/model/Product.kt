@@ -11,6 +11,7 @@ data class Product(
     val productName:String,
     val productPrice:Double,
     val createAt:Long,
+    val coinType:String,
     val freeDelivery:Boolean,
     val productDescription:String,
     var inFav:Boolean?=false,
