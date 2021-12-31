@@ -203,6 +203,7 @@ class OrdersRepository(
 
     private suspend fun rowToTrackingOrder(row: QueryRowSet, user: User): Tracking? {
         return if (row == null) {
+
             null
         } else {
             val trackingId = row[TrackingEntity.orderId] ?: -1
