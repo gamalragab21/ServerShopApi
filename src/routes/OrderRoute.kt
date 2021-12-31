@@ -1,6 +1,8 @@
 package com.example.routes
 
 import com.example.data.model.Order
+import com.example.data.model.Restaurant
+import com.example.data.model.Tracking
 import com.example.data.model.User
 import com.example.repositories.OrdersRepository
 import com.example.utils.MyResponse
@@ -18,6 +20,8 @@ const val PER_ORDERS = "$ORDERS/preOrders"
 const val HISTORY_ORDERS = "$ORDERS/historyOrders"
 const val DELETE_ORDERS = "$ORDERS/deleteOrder"
 const val UPDATE_STATUS_ORDERS = "$ORDERS/updateOrder"
+const val UPDATE_TRACKING = "$ORDERS/updateTracking"
+const val ORDER_TRACKING = "$ORDERS/orderTracking"
 
 fun Route.orderRoute(ordersRepository: OrdersRepository) {
     authenticate("jwt") {
@@ -86,6 +90,49 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
                     )
                 )
                 return@post
+            }
+
+        }
+
+        get(ORDERS) {
+            // get user info from jwt
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+
+            try {
+                val result = ordersRepository.getOrders(user)
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = " Successfully",
+                        data = result
+                    )
+                )
+                return@get
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed",
+                        data = null
+                    )
+                )
+                return@get
             }
 
         }
@@ -242,7 +289,7 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
                     HttpStatusCode.BadGateway,
                     MyResponse(
                         success = false,
-                        message =  "Missing Some Fields ",
+                        message = "Missing Some Fields ",
                         data = null
                     )
                 )
@@ -250,7 +297,7 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
             }
 
             try {
-                val result = ordersRepository.deleteOrderOfUser(user,orderId)
+                val result = ordersRepository.deleteOrderOfUser(user, orderId)
                 if (result > 0) {
                     call.respond(
                         HttpStatusCode.OK,
@@ -289,10 +336,9 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
 
         put(UPDATE_STATUS_ORDERS) {
             // get user info from jwt
-            val user = try {
-                call.principal<User>()!!
-            }
-            catch (e: Exception) {
+            val restaurant = try {
+                call.principal<Restaurant>()!!
+            } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.BadRequest,
                     MyResponse(
@@ -306,13 +352,12 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
 
             val orderId = try {
                 call.request.queryParameters["orderId"]!!.toInt()
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.BadGateway,
                     MyResponse(
                         success = false,
-                        message =  "Missing Some Fields ",
+                        message = "Missing Some Fields ",
                         data = null
                     )
                 )
@@ -321,21 +366,32 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
 
             val orderType = try {
                 call.request.queryParameters["orderType"]!!.toInt()
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.BadGateway,
                     MyResponse(
                         success = false,
-                        message =  "Missing Some Fields ",
+                        message = "Missing Some Fields ",
                         data = null
                     )
                 )
                 return@put
             }
-
+            val userId = try {
+                call.request.queryParameters["userId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = "Missing Some Fields ",
+                        data = null
+                    )
+                )
+                return@put
+            }
             try {
-                val result = ordersRepository.updateOrderStatus(orderType,orderId,user)
+                val result = ordersRepository.updateOrderStatus(orderType, orderId,userId, restaurant)
                 if (result > 0) {
                     call.respond(
                         HttpStatusCode.OK,
@@ -345,6 +401,7 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
                             data = result
                         )
                     )
+
                     return@put
                 } else {
                     call.respond(
@@ -368,6 +425,129 @@ fun Route.orderRoute(ordersRepository: OrdersRepository) {
                     )
                 )
                 return@put
+            }
+
+        }
+
+        post(UPDATE_TRACKING) {
+            val restaurant = try {
+                call.principal<Restaurant>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@post
+            }
+
+            val tracking = try {
+                call.receive<Tracking>()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = "Missing Some Fields",
+                        data = null
+                    )
+                )
+                return@post
+            }
+
+            try {
+                tracking.restaurantId = restaurant.restaurantId!!
+                val result = ordersRepository.createTrackingOrder(tracking)
+
+                if (result > 0) {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = true,
+                            message = "Success to get tracking",
+                            data = result
+                        )
+                    )
+                    return@post
+                } else {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = "Conflict to get tracking ",
+                            data = null
+                        )
+                    )
+                    return@post
+                }
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Conflic ",
+                        data = null
+                    )
+                )
+                return@post
+            }
+        }
+
+        get(ORDER_TRACKING) {
+            // get user info from jwt
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+            val orderId = try {
+                call.request.queryParameters["orderId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = false,
+                        message = "Missing Some Fields",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+            try {
+                val result = ordersRepository.getTrackingOrder(user, orderId)
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = " Successfully",
+                        data = result
+                    )
+                )
+                return@get
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed",
+                        data = null
+                    )
+                )
+                return@get
             }
 
         }

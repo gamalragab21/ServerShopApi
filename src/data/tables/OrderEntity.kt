@@ -14,6 +14,7 @@ object OrderEntity : Table<Nothing>("Orders") {
     val productName = varchar("productName")
     val productPrice = double("productPrice")
     val productDistCount = double("productDistCount")
+    val productQuantity = int("productQuantity")
     val freeDelivery = boolean("freeDelivery")
     val createAt = long("createAt")
     val coinType = varchar("coinType")

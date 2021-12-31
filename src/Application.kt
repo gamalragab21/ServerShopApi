@@ -34,7 +34,7 @@ fun Application.module(testing: Boolean = false) {
     val userRepository = UserRepository(db)
     val restaurantRepository = RestaurantRepository(db)
     val categoryAndProductRepository = CategoryAndProductRepository(db,userRepository)
-    val ordersRepository = OrdersRepository(db,userRepository)
+    val ordersRepository = OrdersRepository(db,userRepository,restaurantRepository)
     val tokenManager = TokenManager(config)
 
 
