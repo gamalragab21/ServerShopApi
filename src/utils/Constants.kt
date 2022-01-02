@@ -16,4 +16,6 @@ object Constants {
 //
 //    }
 
+    fun getTimeStamp()=System.currentTimeMillis() / 1000
+
 }

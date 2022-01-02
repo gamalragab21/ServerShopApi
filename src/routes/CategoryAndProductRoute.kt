@@ -22,12 +22,13 @@ const val UPDATE_RATE_PRODUCT = "$PRODUCT_REQUEST/updateRate"
 const val POPULAR_PRODUCT = "$PRODUCT_REQUEST/popular"
 const val CREATE_CATEGORY_REQUEST = "$CATEGORY_REQUEST/createCategory"
 const val CREATE_PRODUCT_CATEGORY_REQUEST = "$PRODUCT_REQUEST/createProduct"
+const val FILTER_PRODUCT = "$PRODUCT_REQUEST/filterProduct"
 
 fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProductRepository) {
 
 
-    authenticate("jwt"){
-    post(CREATE_CATEGORY_REQUEST) {
+    authenticate("jwt") {
+        post(CREATE_CATEGORY_REQUEST) {
             val categoryRequest = try {
                 call.receive<Category>()
             } catch (e: Exception) {
@@ -57,7 +58,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
             try {
 
-                categoryRequest.restaurantId= restaurant.restaurantId!!
+                categoryRequest.restaurantId = restaurant.restaurantId!!
                 val result = categoryAndProductRepository.createCategory(categoryRequest)
 
                 if (result > 0) {
@@ -98,52 +99,51 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
         }
 
-    get(CATEGORY_REQUEST) {
+        get(CATEGORY_REQUEST) {
 
-        val restaurantId = try {
-            call.request.queryParameters["restaurantId"]!!.toInt()
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = "Missing restaurantId Field",
-                    data = null
+            val restaurantId = try {
+                call.request.queryParameters["restaurantId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = "Missing restaurantId Field",
+                        data = null
+                    )
                 )
-            )
-            return@get
+                return@get
+            }
+            try {
+
+                val categories = categoryAndProductRepository.getCategoryOfRestaurant(restaurantId)
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "Success",
+                        data = categories
+                    )
+                )
+                return@get
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed get Category",
+                        data = null
+                    )
+                )
+                return@get
+            }
         }
-        try {
 
-            val categories = categoryAndProductRepository.getCategoryOfRestaurant(restaurantId)
-            call.respond(
-                HttpStatusCode.OK,
-                MyResponse(
-                    success = true,
-                    message = "Success",
-                    data = categories
-                )
-            )
-            return@get
-
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed get Category",
-                    data = null
-                )
-            )
-            return@get
-        }
-    }
-
-    post(CREATE_PRODUCT_CATEGORY_REQUEST) {
+        post(CREATE_PRODUCT_CATEGORY_REQUEST) {
             val productRequest = try {
                 call.receive<Product>()
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.BadGateway,
                     MyResponse(
@@ -157,8 +157,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
             val restaurant = try {
                 call.principal<Restaurant>()!!
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.BadGateway,
                     MyResponse(
@@ -172,8 +171,8 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
             try {
 
-                productRequest.restaurantId=restaurant.restaurantId!!
-                val result=categoryAndProductRepository.createProduct(productRequest)
+                productRequest.restaurantId = restaurant.restaurantId!!
+                val result = categoryAndProductRepository.createProduct(productRequest)
                 if (result > 0) {
                     call.respond(
                         HttpStatusCode.OK,
@@ -210,53 +209,51 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
         }
 
-    get(PRODUCT_REQUEST) {
-        val user = try {
-            call.principal<User>()!!
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed ",
-                    data = null
+        get(PRODUCT_REQUEST) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
                 )
-            )
-            return@get
-        }
-        val restaurantId = try {
-            call.request.queryParameters["restaurantId"]!!.toInt()
-        }
-        catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = "Missing restaurantId Field",
-                    data = null
+                return@get
+            }
+            val restaurantId = try {
+                call.request.queryParameters["restaurantId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = "Missing restaurantId Field",
+                        data = null
+                    )
                 )
-            )
-            return@get
-        }
+                return@get
+            }
 
-        val categoryId = try {
-            call.request.queryParameters["categoryId"]!!.toInt()
-        }
-        catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = "Missing CategoryId Field",
-                    data = null
+            val categoryId = try {
+                call.request.queryParameters["categoryId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = "Missing CategoryId Field",
+                        data = null
+                    )
                 )
-            )
-            return@get
-        }
-        try {
+                return@get
+            }
+            try {
 
 
-                val products = categoryAndProductRepository.getProductOfCategory(categoryId,restaurantId,user)
+                val products = categoryAndProductRepository.getProductOfCategory(categoryId, restaurantId, user)
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
@@ -268,52 +265,51 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
                 return@get
 
 
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed get Category",
-                    data = null
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed get Category",
+                        data = null
+                    )
                 )
-            )
-            return@get
+                return@get
+            }
         }
-    }
 
-    get(FIND_PRODUCT_REQUEST) {
-        val user = try {
-            call.principal<User>()!!
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed ",
-                    data = null
+        get(FIND_PRODUCT_REQUEST) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
                 )
-            )
-            return@get
-        }
-        val productId = try {
-            call.request.queryParameters["productId"]!!.toInt()
-        }
-        catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = "Missing restaurantId Field",
-                    data = null
+                return@get
+            }
+            val productId = try {
+                call.request.queryParameters["productId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = "Missing restaurantId Field",
+                        data = null
+                    )
                 )
-            )
-            return@get
-        }
+                return@get
+            }
 
-        try {
+            try {
 
 
-                val product = categoryAndProductRepository.findProductById(productId,user)
+                val product = categoryAndProductRepository.findProductById(productId, user)
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
@@ -325,50 +321,49 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
                 return@get
 
 
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed get Category",
-                    data = null
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed get Category",
+                        data = null
+                    )
                 )
-            )
-            return@get
-        }
-    }
-
-    get(PRODUCT_REQUEST_FORYOU) {
-        val user = try {
-            call.principal<User>()!!
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed ",
-                    data = null
-                )
-            )
-            return@get
-        }
-        val restaurantId = try {
-            call.request.queryParameters["restaurantId"]!!.toInt()
-        }
-        catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = "Missing restaurantId Field",
-                    data = null
-                )
-            )
-            return@get
+                return@get
+            }
         }
 
-        try {
-                val products = categoryAndProductRepository.getProductForYou(restaurantId,user)
+        get(PRODUCT_REQUEST_FORYOU) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+            val restaurantId = try {
+                call.request.queryParameters["restaurantId"]!!.toInt()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = "Missing restaurantId Field",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+            try {
+                val products = categoryAndProductRepository.getProductForYou(restaurantId, user)
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
@@ -380,125 +375,126 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
                 return@get
 
 
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed get Category",
-                    data = null
-                )
-            )
-            return@get
-        }
-    }
-
-    get(MY_FAVOURITES_PRODUCTTs){
-        val user = try {
-            call.principal<User>()!!
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed ",
-                    data = null
-                )
-            )
-            return@get
-        }
-
-        try {
-             println("UserId :${user.toString()}")
-            val favRestaurants = categoryAndProductRepository.getAllFavProduct(user)
-            call.respond(
-                HttpStatusCode.OK,
-                MyResponse(
-                    success = true,
-                    message = "Success",
-                    data = favRestaurants
-                )
-            )
-
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed ",
-                    data = null
-                )
-            )
-            return@get
-        }
-        }
-
-    post(RATE_PRODUCT) {
-        val user = try {
-            call.principal<User>()!!
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed ",
-                    data = null
-                )
-            )
-            return@post
-        }
-        val rateProduct = try {
-            call.receive<RateProduct>()
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing Some Fields",
-                    data = null
-                )
-            )
-            return@post
-        }
-
-
-        try {
-            rateProduct.userId=user.id
-            val result = categoryAndProductRepository.rateProduct(rateProduct)
-            if (result>0) {
-                call.respond(
-                    HttpStatusCode.OK,
-                    MyResponse(
-                        success = true,
-                        message = "\uD83D\uDE0D Thanks For Your Rate",
-                        data = result
-                    )
-                )
-                return@post
-            }else{
+            } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.Conflict,
                     MyResponse(
                         success = false,
-                        message = "Failed",
+                        message = e.message ?: "Failed get Category",
+                        data = null
+                    )
+                )
+                return@get
+            }
+        }
+
+        get(MY_FAVOURITES_PRODUCTTs) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+            try {
+                println("UserId :${user.toString()}")
+                val favRestaurants = categoryAndProductRepository.getAllFavProduct(user)
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "Success",
+                        data = favRestaurants
+                    )
+                )
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+        }
+
+        post(RATE_PRODUCT) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@post
+            }
+            val rateProduct = try {
+                call.receive<RateProduct>()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = "Missing Some Fields",
                         data = null
                     )
                 )
                 return@post
             }
 
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed Rated",
-                    data = null
+
+            try {
+                rateProduct.userId = user.id
+                val result = categoryAndProductRepository.rateProduct(rateProduct)
+                if (result > 0) {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = true,
+                            message = "\uD83D\uDE0D Thanks For Your Rate",
+                            data = result
+                        )
+                    )
+                    return@post
+                } else {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = "Failed",
+                            data = null
+                        )
+                    )
+                    return@post
+                }
+
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed Rated",
+                        data = null
+                    )
                 )
-            )
-            return@post
+                return@post
+            }
         }
-    }
+
         put(UPDATE_RATE_PRODUCT) {
             val user = try {
                 call.principal<User>()!!
@@ -537,7 +533,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
                         MyResponse(
                             success = true,
                             message = "\uD83D\uDE0D Thanks For Your Rate",
-                            data = rateProduct
+                            data = result
                         )
                     )
                     return@put
@@ -566,8 +562,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
             }
         }
 
-
-    post(SET_FAV_PRODUCT_REQUEST) {
+        post(SET_FAV_PRODUCT_REQUEST) {
             val user = try {
                 call.principal<User>()!!
             } catch (e: Exception) {
@@ -636,8 +631,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
         }
 
-
-    delete(DELETE_My_FAV_PRODUCT) {
+        delete(DELETE_My_FAV_PRODUCT) {
             val user = try {
                 call.principal<User>()!!
             } catch (e: Exception) {
@@ -705,7 +699,7 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
 
         }
 
-        get(POPULAR_PRODUCT){
+        get(POPULAR_PRODUCT) {
             val user = try {
                 call.principal<User>()!!
             } catch (e: Exception) {
@@ -743,6 +737,62 @@ fun Route.categoryAndProductRoute(categoryAndProductRepository: CategoryAndProdu
                 )
                 return@get
             }
+        }
+
+        post(FILTER_PRODUCT) {
+            val user = try {
+                call.principal<User>()!!
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@post
+            }
+
+            val filterName = try {
+                call.request.queryParameters["filterName"]!!.toString()
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = "Missing Some Fields",
+                        data = null
+                    )
+                )
+                return@post
+            }
+
+            try {
+
+                val result = categoryAndProductRepository.filterProduct(filterName, 5, user)
+
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "Success",
+                        data = result
+                    )
+                )
+                return@post
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.BadGateway,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Error Some Fields",
+                        data = null
+                    )
+                )
+                return@post
+            }
+
         }
 
 

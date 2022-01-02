@@ -347,5 +347,18 @@ class CategoryAndProductRepository(val db: Database,val userRepository: UserRepo
         result
     }
 
+    suspend fun filterProduct(nameProduct: String,ratingStarts:Int, user: User)=withContext(Dispatchers.IO){
+        val filterProduct= db.from(ProductEntity)
+            .select()
+            .where {
+                ( ProductEntity.productName like "%${nameProduct}%") or
+                ( ProductEntity.productDescription like "%${nameProduct}%")
+            }.map {
+                rowToProducts(row = it,user)
+            }
+
+        filterProduct
+    }
+
 
 }

@@ -2,6 +2,7 @@ package com.example.repositories
 
 import com.example.data.model.*
 import com.example.data.tables.*
+import com.example.utils.Constants.getTimeStamp
 import com.mysql.cj.x.protobuf.MysqlxCrud
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -110,25 +111,26 @@ class OrdersRepository(
 
     suspend fun updateOrderStatus(orderStatus: Int, orderId: Int, userId: Int, restaurant: Restaurant) =
         withContext(Dispatchers.IO) {
-
-            if (orderStatus==1) {
+   print("${orderStatus } , ${userId},${restaurant}")
+            if (orderStatus == 1) {
                 createTrackingOrder(
                     Tracking(
                         0,
                         0,
                         userId,
-                        11,
+                        getTimeStamp(),
                         orderId, restaurant.restaurantId!!,
                         null
                     )
                 )
+
             }
             val result = db.update(OrderEntity) {
                 set(it.orderType, orderStatus)
                 where {
                     (it.orderId eq orderId) and
-                     (it.restaurantId eq restaurant.restaurantId!!) and
-                      (it.userId eq userId)
+                            (it.restaurantId eq restaurant.restaurantId!!) and
+                            (it.userId eq userId)
                 }
             }
 
